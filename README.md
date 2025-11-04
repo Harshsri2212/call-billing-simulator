@@ -1,4 +1,4 @@
-﻿# call-billing-simulator
+
 #  Call Billing Simulator
 
 ![App Screenshot](./screenshot.png)
@@ -28,4 +28,5 @@ Clone the project
 
 ```bash
 git clone https://github.com/Harshri2212/call-billing-simulator.git
+
 
