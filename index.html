@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Billing Simulator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(to right, #e3f2fd, #ffffff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-top: 40px;
+      color: #0d47a1;
+      font-size: 28px;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      width: 340px;
+      margin-top: 30px;
+      padding: 25px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .container:hover {
+      transform: scale(1.02);
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    button {
+      width: 95%;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background-color: #0d47a1;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      width: 320px;
+      text-align: left;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      font-size: 14px;
+      color: #333;
+    }
+
+    .summary {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: #0d47a1;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📞 Call Billing Simulator</h1>
+
+  <div class="container">
+    <h3>Add a Call</h3>
+    <input id="number" placeholder="Phone Number" />
+    <input id="duration" placeholder="Duration (in seconds)" type="number" />
+    <button onclick="addCall()">Add Call</button>
+  </div>
+
+  <div class="container">
+    <h3>Generate Bill</h3>
+    <input id="billNumber" placeholder="Enter Phone Number" />
+    <button onclick="getBill()">Show Bill</button>
+  </div>
+
+  <div class="result-box" id="result">
+    <div class="summary">
+      <p><span class="highlight">Total Calls:</span> —</p>
+      <p><span class="highlight">Total Bill:</span> —</p>
+    </div>
+    <div id="details">No data yet</div>
+  </div>
+
+  <footer>
+    Made by Harsh Srivastava | Node.js + Express + HTML Project
+  </footer>
+
+  <script>
+    const apiBase = 'http://localhost:3000';
+
+    async function addCall() {
+      const number = document.getElementById('number').value;
+      const duration = document.getElementById('duration').value;
+
+      if (!number || !duration) {
+        alert("Please fill both fields!");
+        return;
+      }
+
+      const res = await fetch(`${apiBase}/addcall`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number, duration })
+      });
+      const data = await res.json();
+      alert(data.message || "Call added!");
+      document.getElementById('number').value = "";
+      document.getElementById('duration').value = "";
+    }
+
+    async function getBill() {
+      const number = document.getElementById('billNumber').value;
+      if (!number) {
+        alert("Please enter a phone number to check bill!");
+        return;
+      }
+
+      const res = await fetch(`${apiBase}/bill/${number}`);
+      const data = await res.json();
+
+      if (data.message && data.message.includes("No calls")) {
+        document.getElementById('details').textContent = data.message;
+        document.querySelector('.summary').innerHTML = `
+          <p><span class="highlight">Total Calls:</span> 0</p>
+          <p><span class="highlight">Total Bill:</span> ₹0</p>`;
+        return;
+      }
+
+      document.querySelector('.summary').innerHTML = `
+        <p><span class="highlight">Total Calls:</span> ${data.totalCalls}</p>
+        <p><span class="highlight">Total Bill:</span> ₹${data.totalBill}</p>`;
+
+      let html = "<b>Call Details:</b><br>";
+      data.calls.forEach((c, i) => {
+        html += `${i + 1}. Duration: ${c.duration}s → ${c.minutes} min → ₹${c.charge}<br>`;
+      });
+
+      document.getElementById('details').innerHTML = html;
+    }
+  </script>
+
+</body>
+</html>
